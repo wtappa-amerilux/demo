@@ -3,49 +3,231 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Journal &amp; Todo</title>
+  <title>Facelog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="app-header">
-    <h1 class="brand">Notebook</h1>
-    <nav class="nav" aria-label="Sections">
-      <a href="#journal" class="nav-link" data-view="journal">Journal</a>
-      <a href="#todo" class="nav-link" data-view="todo">Todo</a>
-    </nav>
-  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#journal" aria-label="Facelog home">
+        <span class="brand-mark" aria-hidden="true">
+          <i style="--c:var(--i5)"></i><i style="--c:var(--i3)"></i><i style="--c:var(--i4)"></i>
+          <i style="--c:var(--i2)"></i><i style="--c:var(--i5)"></i><i style="--c:var(--i1)"></i>
+          <i style="--c:var(--i4)"></i><i style="--c:var(--i2)"></i><i style="--c:var(--i3)"></i>
+        </span>
+        <span class="brand-name">Facelog</span>
+      </a>
 
-  <p id="storage-warning" class="notice" hidden>
-    Browser storage is unavailable (private window or blocked site data). Anything you add will be lost when you close this tab.
-  </p>
+      <nav class="nav" aria-label="Sections">
+        <a href="#journal" class="nav-link" data-view="journal">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4zM16 16h4v4h-4z"/></svg>
+          <span>Journal</span>
+        </a>
+        <a href="#cube" class="nav-link" data-view="cube">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8.5M10 2.5h4M18.5 5.5l1.5-1.5"/></svg>
+          <span>Cube timer</span>
+        </a>
+        <a href="#trends" class="nav-link" data-view="trends">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 15l5-5 4 3 7-7"/></svg>
+          <span>Trends</span>
+        </a>
+        <a href="#todo" class="nav-link" data-view="todo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12.5l2.5 2.5 5-6"/></svg>
+          <span>Todo</span>
+        </a>
+      </nav>
 
-  <main>
-    <section id="view-journal" class="view" data-view="journal" hidden>
-      <h2>Journal</h2>
-      <form id="journal-form" class="card form">
-        <input id="journal-title" type="text" placeholder="Title" maxlength="120">
-        <textarea id="journal-body" rows="5" placeholder="What's on your mind?" required></textarea>
-        <button type="submit">Save entry</button>
-      </form>
-      <ul id="journal-list" class="list"></ul>
-      <p id="journal-empty" class="empty" hidden>No journal entries yet. Write your first one above.</p>
-    </section>
+      <div class="sidebar-foot">
+        <button type="button" class="link-btn" id="export-btn">Download a backup</button>
+        <label class="link-btn" for="import-file">Restore from backup</label>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+        <p class="fineprint">Everything is stored in this browser only.</p>
+      </div>
+    </aside>
 
-    <section id="view-todo" class="view" data-view="todo" hidden>
-      <h2>Todo</h2>
-      <form id="todo-form" class="card form form-inline">
-        <input id="todo-text" type="text" placeholder="Add a task" maxlength="200" required>
-        <button type="submit">Add</button>
-      </form>
-      <p id="todo-count" class="meta"></p>
-      <ul id="todo-list" class="list"></ul>
-      <p id="todo-empty" class="empty" hidden></p>
-    </section>
-  </main>
+    <div class="main-wrap">
+      <p id="storage-warning" class="notice" hidden>
+        This browser is blocking storage (private window or blocked site data), so nothing you log will be kept after you close the tab.
+      </p>
 
-  <!-- Classic scripts, not ES modules: modules are blocked on file://, and this app opens by double-click. -->
+      <main>
+        <!-- JOURNAL -->
+        <section id="view-journal" class="view" data-view="journal" hidden>
+          <div class="daybar">
+            <div class="daybar-nav">
+              <button type="button" class="icon-btn" id="day-prev" aria-label="Previous day">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+              </button>
+              <input type="date" id="day-picker" aria-label="Date of entry">
+              <button type="button" class="icon-btn" id="day-next" aria-label="Next day">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+              </button>
+              <button type="button" class="ghost-btn" id="day-today">Go to today</button>
+            </div>
+            <p class="save-status" id="save-status" aria-live="polite"></p>
+          </div>
+
+          <header class="day-head">
+            <h1 id="day-title"></h1>
+            <p class="day-sub" id="day-sub"></p>
+          </header>
+
+          <div class="journal-grid">
+            <div class="journal-side">
+              <figure class="face-tile">
+                <div class="face" id="face" role="img"></div>
+                <figcaption>
+                  <span>Each square is one quality from the list. Brighter means you felt it more.</span>
+                  <span class="scale" aria-hidden="true">
+                    <span class="scale-end">less</span>
+                    <i style="--c:var(--i1)"></i><i style="--c:var(--i2)"></i><i style="--c:var(--i3)"></i><i style="--c:var(--i4)"></i><i style="--c:var(--i5)"></i>
+                    <span class="scale-end">more</span>
+                  </span>
+                </figcaption>
+              </figure>
+
+              <div class="panel calendar" id="calendar"></div>
+            </div>
+
+            <form class="journal-form" id="journal-form" autocomplete="off" onsubmit="return false">
+              <fieldset class="panel">
+                <legend>Feels like</legend>
+                <div class="temp-row">
+                  <input type="number" id="feels-input" inputmode="decimal" step="1" min="-80" max="160" aria-label="Feels-like temperature" placeholder="--">
+                  <div class="seg" role="group" aria-label="Temperature unit">
+                    <button type="button" data-unit="F">°F</button>
+                    <button type="button" data-unit="C">°C</button>
+                  </div>
+                  <span class="temp-word" id="temp-word"></span>
+                </div>
+                <p class="hint">What the air felt like to you, not what the forecast said.</p>
+              </fieldset>
+
+              <fieldset class="panel">
+                <legend>How the weather felt</legend>
+                <p class="hint">Pick 1 to 5 for any that stood out. Tap a selected dot again to clear it.</p>
+                <div class="qualities" id="qualities"></div>
+              </fieldset>
+
+              <fieldset class="panel">
+                <legend>Tags</legend>
+                <div class="chips" id="tag-chips"></div>
+                <div class="inline-add">
+                  <input type="text" id="tag-input" maxlength="30" placeholder="Add your own tag" aria-label="New tag">
+                  <button type="button" class="ghost-btn" id="tag-add">Add tag</button>
+                </div>
+              </fieldset>
+
+              <fieldset class="panel">
+                <legend>Entry</legend>
+                <input type="text" id="entry-title" maxlength="120" placeholder="Title (optional)" aria-label="Entry title">
+                <textarea id="entry-body" rows="6" placeholder="What happened today?" aria-label="Entry text"></textarea>
+              </fieldset>
+
+              <fieldset class="panel">
+                <legend>Notes</legend>
+                <ul class="notes" id="notes-list"></ul>
+                <div class="inline-add">
+                  <input type="text" id="note-input" maxlength="300" placeholder="Add a quick note" aria-label="New note">
+                  <button type="button" class="ghost-btn" id="note-add">Add note</button>
+                </div>
+              </fieldset>
+
+              <button type="button" class="danger-link" id="day-delete" hidden>Delete this day's entry</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- CUBE -->
+        <section id="view-cube" class="view" data-view="cube" hidden>
+          <header class="page-head">
+            <h1>Cube timer</h1>
+            <p class="page-sub">Hold space until the time turns green, then let go to start. Press any key to stop. On a touchscreen, touch and hold the timer.</p>
+          </header>
+
+          <button type="button" class="timer" id="timer" data-state="idle" aria-describedby="timer-hint">
+            <span class="timer-time" id="timer-time">0.00</span>
+            <span class="timer-hint" id="timer-hint">Hold to get ready</span>
+          </button>
+
+          <div class="last-solve" id="last-solve" hidden>
+            <span id="last-solve-text"></span>
+            <button type="button" class="ghost-btn" data-last="+2">+2</button>
+            <button type="button" class="ghost-btn" data-last="dnf">DNF</button>
+            <button type="button" class="ghost-btn" data-last="delete">Delete</button>
+          </div>
+
+          <div class="stats" id="cube-stats"></div>
+
+          <details class="panel past-solve">
+            <summary>Log a past solve</summary>
+            <form id="past-solve-form" class="past-solve-form" autocomplete="off">
+              <label>Date <input type="date" id="ps-date" required></label>
+              <label>Time <input type="text" id="ps-time" placeholder="1:23.45 or 83.45" required></label>
+              <label>Penalty
+                <select id="ps-penalty">
+                  <option value="none">None</option>
+                  <option value="+2">+2</option>
+                  <option value="dnf">DNF</option>
+                </select>
+              </label>
+              <label class="wide">Note <input type="text" id="ps-note" maxlength="200" placeholder="Optional"></label>
+              <p class="form-error" id="ps-error" role="alert"></p>
+              <button type="submit" class="primary-btn">Add solve</button>
+            </form>
+          </details>
+
+          <div id="solve-days"></div>
+        </section>
+
+        <!-- TRENDS -->
+        <section id="view-trends" class="view" data-view="trends" hidden>
+          <header class="page-head">
+            <h1>Trends</h1>
+            <p class="page-sub" id="trends-sub"></p>
+          </header>
+          <div class="filter-row" role="group" aria-label="Date range" id="range-row">
+            <button type="button" data-range="7">7 days</button>
+            <button type="button" data-range="30">30 days</button>
+            <button type="button" data-range="90">90 days</button>
+            <button type="button" data-range="365">1 year</button>
+            <button type="button" data-range="all">All time</button>
+          </div>
+          <div class="stats" id="trend-stats"></div>
+          <div id="trend-charts"></div>
+        </section>
+
+        <!-- TODO -->
+        <section id="view-todo" class="view" data-view="todo" hidden>
+          <header class="page-head">
+            <h1>Todo</h1>
+          </header>
+          <form id="todo-form" class="panel inline-add todo-form">
+            <input id="todo-text" type="text" placeholder="Add a task" maxlength="200" required aria-label="New task">
+            <button type="submit" class="primary-btn">Add task</button>
+          </form>
+          <p id="todo-count" class="meta"></p>
+          <ul id="todo-list" class="list"></ul>
+          <p id="todo-empty" class="empty" hidden></p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- Classic scripts, not ES modules: modules are blocked on file://, and this app opens by double-click. Order matters. -->
+  <script src="js/util.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/cubestats.js"></script>
+  <script src="js/charts.js"></script>
   <script src="js/journal.js"></script>
+  <script src="js/cube.js"></script>
+  <script src="js/trends.js"></script>
   <script src="js/todo.js"></script>
   <script src="js/app.js"></script>
 </body>
