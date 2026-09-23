@@ -414,8 +414,6 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
 .chart .dot { stroke: var(--surface); stroke-width: 2; }
 .chart .crosshair { stroke: var(--ink-2); stroke-width: 1; }
 .chart .hit { fill: transparent; }
-.chart .bar { transition: opacity 100ms; }
-.chart .bar.hover { opacity: 0.75; }
 .chart .cell { stroke: var(--plastic); stroke-width: 2; }
 .chart .cell.empty { fill: var(--plastic-2); }
 .chart .cell.hover { stroke: var(--plastic-ink); stroke-width: 1.5; }

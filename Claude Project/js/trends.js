@@ -92,7 +92,6 @@ App.trends = (function () {
     renderTemp(days, d0, d1, unit);
     renderFeel(days, d0, d1);
     renderSolveTimes(solves, d0, d1);
-    renderSolveCounts(solves, d0, d1);
     renderTags(days);
   }
 
@@ -138,48 +137,54 @@ App.trends = (function () {
     const title = 'Solve times';
     if (!solves.length) return emptyCard(title, 'No cube solves in this range. Time one on the Cube timer page.');
     const best = [], mean = [], rows = [];
-    let allDnfDays = 0;
-    CS.byDay(solves).forEach((list, date) => {
+    let allDnfDays = 0, weekendDays = 0;
+    const byDay = CS.byDay(solves);
+    // With one solve per day, best and mean are the same number and the two
+    // lines draw on top of each other under a two-entry legend. So: one line
+    // unless some day in range has more than one solve.
+    const multi = Array.from(byDay.values()).some(list => list.length > 1);
+    byDay.forEach((list, date) => {
       const d = U.dayNum(date);
       // CLAIMS: "Daily best" = fastest completed solve that day. "Daily mean" = mean of that day's completed solves.
       // COUNTS: CS.best / CS.meanCompleted over solves dated that day (+2 applied, DNF excluded).
       const b = CS.best(list), m = CS.meanCompleted(list);
-      if (b == null) { allDnfDays++; rows.push([date, 'DNF', 'DNF', String(list.length)]); return; }
+      rows.push([date, b == null ? 'DNF' : U.fmtMs(b), b == null ? 'DNF' : U.fmtMs(m), String(list.length)]);
+      // The axis has no weekends. A weekend solve stays in the table and the
+      // stats above, and the subtitle says how many days the chart left off.
+      if (C.isWeekend(d)) { weekendDays++; return; }
+      if (b == null) { allDnfDays++; return; }
       best.push({ d, y: b / 1000 });
       mean.push({ d, y: m / 1000 });
-      rows.push([date, U.fmtMs(b), U.fmtMs(m), String(list.length)]);
     });
-    const sub = 'Seconds, per day with solves. DNFs are left out of both lines' +
-      (allDnfDays ? '; ' + U.plural(allDnfDays, 'day') + ' with only DNFs has no point.' : '.');
+    const sub = 'Seconds, per weekday with a solve. Weekends are left off the axis, so Friday runs straight into Monday. ' +
+      (multi ? 'DNFs are left out of both lines' : 'DNFs are left out') +
+      (allDnfDays ? '; ' + U.plural(allDnfDays, 'day') + ' with only DNFs has no point' : '') + '.' +
+      (weekendDays ? ' ' + U.plural(weekendDays, 'weekend day') + ' with solves ' + (weekendDays === 1 ? 'is' : 'are') + ' not on the chart; see the table.' : '');
     const c = card('solves', title, sub, {
-      legend: legend([
+      legend: multi ? legend([
         { kind: 'key-line', color: 'var(--series-1)', label: 'Daily best' },
-        { kind: 'key-line', color: 'var(--series-2)', label: 'Daily mean' }])
+        { kind: 'key-line', color: 'var(--series-2)', label: 'Daily mean' }]) : null
     });
-    if (c.table) return C.table(c.body, ['Date', 'Best', 'Mean', 'Solves'], rows.sort((a, b) => b[0].localeCompare(a[0])).map(r => [U.fmtMed(r[0])].concat(r.slice(1))));
-    if (!best.length) { c.body.append(U.el('p', { class: 'chart-empty', text: 'Every solve in this range is a DNF, so there is nothing to plot.' })); return; }
+    rows.sort((a, b) => b[0].localeCompare(a[0]));
+    if (c.table) {
+      return multi
+        ? C.table(c.body, ['Date', 'Best', 'Mean', 'Solves'], rows.map(r => [U.fmtMed(r[0])].concat(r.slice(1))))
+        : C.table(c.body, ['Date', 'Time'], rows.map(r => [U.fmtMed(r[0]), r[1]]));
+    }
+    if (!best.length) {
+      const why = weekendDays && !allDnfDays ? 'Every solve in this range is on a weekend, so there is nothing to plot on the weekday axis.'
+        : weekendDays ? 'Every weekday solve in this range is a DNF, and the rest are on weekends, so there is nothing to plot.'
+        : 'Every solve in this range is a DNF, so there is nothing to plot.';
+      c.body.append(U.el('p', { class: 'chart-empty', text: why }));
+      return;
+    }
     C.line(c.body, {
-      d0, d1, ariaLabel: title + ' chart. Use Show table for the values.',
-      series: [
-        { label: 'daily best', color: 'var(--series-1)', points: best },
-        { label: 'daily mean', color: 'var(--series-2)', points: mean }],
+      d0, d1, skipWeekends: true, ariaLabel: title + ' chart, weekdays only. Use Show table for the values.',
+      series: multi
+        ? [{ label: 'daily best', color: 'var(--series-1)', points: best },
+           { label: 'daily mean', color: 'var(--series-2)', points: mean }]
+        : [{ label: 'solve time', color: 'var(--series-1)', points: best }],
       yFmt: (v, full) => full ? U.fmtMs(v * 1000) : String(v)
-    });
-  }
-
-  function renderSolveCounts(solves, d0, d1) {
-    const title = 'Solves per day';
-    if (!solves.length) return; // the solve-times card already says there are none
-    const pts = [];
-    CS.byDay(solves).forEach((list, date) => {
-      const dnf = CS.dnfCount(list);
-      pts.push({ d: U.dayNum(date), y: list.length, date, detail: dnf ? 'including ' + dnf + ' DNF' : 'solves' });
-    });
-    const c = card('counts', title, 'Every solve logged on each day, DNFs included.');
-    if (c.table) return C.table(c.body, ['Date', 'Solves', 'DNFs'], pts.slice().sort((a, b) => b.d - a.d).map(p => [U.fmtMed(p.date), String(p.y), String(CS.dnfCount(solves.filter(s => s.date === p.date)))]));
-    C.columns(c.body, {
-      d0, d1, points: pts, color: 'var(--series-1)', ariaLabel: title + ' chart. Use Show table for the values.',
-      yFmt: (v, full) => full ? U.plural(v, 'solve') : String(v)
     });
   }
 

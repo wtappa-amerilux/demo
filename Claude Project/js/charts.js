@@ -1,7 +1,7 @@
 // Hand-built SVG charts, no library (the app runs offline from file://).
 // Conventions: 2px lines, r=4 dots with a surface ring, hairline solid grid,
-// columns <= 24px with 4px rounded tops, one y-axis per chart, tooltips that
-// enhance but never gate (every chart has a table view in trends.js).
+// one y-axis per chart, tooltips that enhance but never gate (every chart has
+// a table view in trends.js).
 window.App = window.App || {};
 
 App.charts = (function () {
@@ -67,16 +67,29 @@ App.charts = (function () {
     return Math.max(280, host.clientWidth);
   }
 
+  // Day number -> is Saturday or Sunday. Day 0 (1970-01-01) was a Thursday.
+  const isWeekend = d => { const dow = ((d + 4) % 7 + 7) % 7; return dow === 0 || dow === 6; };
+
   // Line chart on a day axis. Lines break across missing days rather than
-  // drawing a slope through days with no data.
-  // cfg: { d0, d1, series: [{ label, color, points: [{ d, y }] }], yFmt, ariaLabel }
+  // drawing a slope through days with no data. With skipWeekends, Saturdays
+  // and Sundays are removed from the axis entirely, so Friday is adjacent to
+  // Monday. Callers must not pass weekend points in that mode (they would
+  // have no position); trends.js filters and reports them.
+  // cfg: { d0, d1, skipWeekends, series: [{ label, color, points: [{ d, y }] }], yFmt, ariaLabel }
   function line(host, cfg) {
     const W = prep(host), H = 240;
     const iw = W - M.left - M.right, ih = H - M.top - M.bottom;
     const ys = cfg.series.flatMap(sr => sr.points.map(p => p.y));
     const { lo, hi, ticks } = niceScale(Math.min(...ys), Math.max(...ys), 4);
-    const x = d => M.left + (cfg.d1 === cfg.d0 ? iw / 2 : (d - cfg.d0) / (cfg.d1 - cfg.d0) * iw);
+
+    // Axis slots: every day in range, or only weekdays.
+    const slots = [];
+    for (let d = cfg.d0; d <= cfg.d1; d++) if (!cfg.skipWeekends || !isWeekend(d)) slots.push(d);
+    const slot = new Map(slots.map((d, i) => [d, i]));
+    const last = slots.length - 1;
+    const x = d => M.left + (last <= 0 ? iw / 2 : slot.get(d) / last * iw);
     const y = v => M.top + ih - (v - lo) / (hi - lo) * ih;
+    const apart = (a, b) => slot.get(b) - slot.get(a) > 1;   // a gap between two points
 
     const root = s('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': cfg.ariaLabel });
     ticks.forEach(t => {
@@ -84,16 +97,16 @@ App.charts = (function () {
       root.append(s('text', { class: 'tick', x: M.left - 8, y: y(t), 'text-anchor': 'end', 'dominant-baseline': 'middle' }, cfg.yFmt(t)));
     });
     root.append(s('line', { class: 'axis', x1: M.left, x2: W - M.right, y1: M.top + ih, y2: M.top + ih }));
-    dayTicks(cfg.d0, cfg.d1, iw).forEach(d => {
-      root.append(s('text', { class: 'tick', x: x(d), y: H - 8, 'text-anchor': 'middle' }, U.fmtShort(U.fromDayNum(d))));
+    dayTicks(0, last, iw).forEach(i => {
+      root.append(s('text', { class: 'tick', x: x(slots[i]), y: H - 8, 'text-anchor': 'middle' }, U.fmtShort(U.fromDayNum(slots[i]))));
     });
 
     const byDay = new Map();
     cfg.series.forEach((sr, si) => {
-      const pts = sr.points.slice().sort((a, b) => a.d - b.d);
+      const pts = sr.points.filter(p => slot.has(p.d)).sort((a, b) => a.d - b.d);
       let path = '';
       pts.forEach((p, i) => {
-        const gap = i === 0 || p.d - pts[i - 1].d > 1;
+        const gap = i === 0 || apart(pts[i - 1].d, p.d);
         path += (gap ? 'M' : 'L') + x(p.d).toFixed(1) + ',' + y(p.y).toFixed(1);
         if (!byDay.has(p.d)) byDay.set(p.d, []);
         byDay.get(p.d)[si] = p;
@@ -102,7 +115,7 @@ App.charts = (function () {
       // Dots on every point while sparse; when dense, only on points with no
       // neighbour, which would otherwise be invisible (a line needs two points).
       pts.forEach((p, i) => {
-        const alone = (i === 0 || p.d - pts[i - 1].d > 1) && (i === pts.length - 1 || pts[i + 1].d - p.d > 1);
+        const alone = (i === 0 || apart(pts[i - 1].d, p.d)) && (i === pts.length - 1 || apart(p.d, pts[i + 1].d));
         if (pts.length <= 45 || alone) {
           root.append(s('circle', { class: 'dot', cx: x(p.d), cy: y(p.y), r: 4, style: 'fill:' + sr.color }));
         }
@@ -137,48 +150,6 @@ App.charts = (function () {
       tip.show(cx, topY, U.fmtMed(U.fromDayNum(bestD)), rows);
     });
     hit.addEventListener('pointerleave', () => { cross.setAttribute('visibility', 'hidden'); ring.replaceChildren(); tip.hide(); });
-  }
-
-  // Columns on a day axis. cfg: { d0, d1, points: [{ d, y, detail }], color, yFmt, ariaLabel }
-  function columns(host, cfg) {
-    const W = prep(host), H = 200;
-    const iw = W - M.left - M.right, ih = H - M.top - M.bottom;
-    const max = Math.max(...cfg.points.map(p => p.y), 1);
-    const { hi, ticks } = niceScale(0, max, 3);
-    const span = cfg.d1 - cfg.d0 + 1;
-    const band = iw / span;
-    const bw = Math.max(2, Math.min(24, band - 2));
-    const x = d => M.left + (d - cfg.d0) * band + band / 2;
-    const y = v => M.top + ih - v / hi * ih;
-
-    const root = s('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': cfg.ariaLabel });
-    ticks.forEach(t => {
-      root.append(s('line', { class: 'grid', x1: M.left, x2: W - M.right, y1: y(t), y2: y(t) }));
-      root.append(s('text', { class: 'tick', x: M.left - 8, y: y(t), 'text-anchor': 'end', 'dominant-baseline': 'middle' }, cfg.yFmt(t)));
-    });
-    dayTicks(cfg.d0, cfg.d1, iw).forEach(d => {
-      root.append(s('text', { class: 'tick', x: x(d), y: H - 8, 'text-anchor': 'middle' }, U.fmtShort(U.fromDayNum(d))));
-    });
-
-    host.append(root);
-    const tip = tooltip(host);
-    cfg.points.forEach(p => {
-      const x0 = x(p.d) - bw / 2, y0 = y(p.y), h = M.top + ih - y0;
-      const r = Math.min(4, bw / 2, h);
-      const bar = s('path', {
-        class: 'bar', style: 'fill:' + cfg.color,
-        d: `M${x0},${y0 + h}V${y0 + r}Q${x0},${y0} ${x0 + r},${y0}H${x0 + bw - r}Q${x0 + bw},${y0} ${x0 + bw},${y0 + r}V${y0 + h}Z`
-      });
-      // Hit area is the whole column band, not just the painted bar.
-      const hit = s('rect', { class: 'hit', x: x(p.d) - Math.max(band, 12) / 2, y: M.top, width: Math.max(band, 12), height: ih });
-      hit.addEventListener('pointerenter', () => {
-        bar.classList.add('hover');
-        tip.show(x(p.d), y0, U.fmtMed(U.fromDayNum(p.d)), [{ value: cfg.yFmt(p.y, true), label: p.detail || '' }]);
-      });
-      hit.addEventListener('pointerleave', () => { bar.classList.remove('hover'); tip.hide(); });
-      root.append(bar, hit);
-    });
-    root.append(s('line', { class: 'axis', x1: M.left, x2: W - M.right, y1: M.top + ih, y2: M.top + ih }));
   }
 
   // Heatmap of rows x every calendar day in range. Days with no entry, and
@@ -248,5 +219,5 @@ App.charts = (function () {
       U.el('tbody', null, rows.map(r => U.el('tr', null, r.map(c => U.el('td', { text: c })))))));
   }
 
-  return { line, columns, heatmap, hbars, table };
+  return { line, heatmap, hbars, table, isWeekend };
 })();

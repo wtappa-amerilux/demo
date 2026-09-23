@@ -20,8 +20,9 @@ online and fall back to system fonts offline.
   solves can be logged against any earlier date. Stats: best single, current ao5
   and ao12 (standard trimmed averages, DNF rules included), today's mean.
 - **Trends**: one date-range filter drives every stat and chart: feels-like
-  temperature, a heatmap of the nine qualities, daily best and mean solve times,
-  solves per day, and tag counts. Every chart has a table view.
+  temperature, a heatmap of the nine qualities, daily best and mean solve times
+  (weekdays only: weekends are left off that axis), and tag counts. Every chart
+  has a table view.
 - **Todo**: simple task list.
 
 ## Structure
