@@ -1,0 +1,13 @@
+
+
+# Working areas: org data pulls, command output, deploy artifacts. Never committed.
+_out/
+_incoming/
+_prodcheck/
+_to_delete/
+test-results/
+*.csv
+*.msg
+
+# Nested repo, versioned on its own
+fuel-rerate/
