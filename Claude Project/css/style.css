@@ -446,16 +446,69 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
 
 /* ---------- Todo ---------- */
 
-.todo-form { margin: 0 0 1.25rem; padding: 0.75rem; }
-.todo-form.inline-add { margin-top: 0; }
-.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-control); }
-.todo-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 1rem; }
-.todo-item input[type="checkbox"] { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
-.todo-item label { flex: 1; overflow-wrap: anywhere; }
-.todo-item.done label { color: var(--muted); text-decoration: line-through; }
-.btn-ghost { background: none; border: 0; color: var(--muted); cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.85rem; }
-.btn-ghost:hover { color: var(--danger); }
+/* The add field is the page's main control: big, on its own row. */
+.todo-add {
+  display: flex; gap: 0.5rem; padding: 0.5rem; margin-bottom: 1.25rem;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel);
+}
+.todo-add input { flex: 1; border: 0; background: transparent; font-size: 1.1rem; padding: 0.6rem 0.75rem; }
+.todo-add input:focus { outline: none; }
+.todo-add:focus-within { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+.todo-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.75rem; }
+.todo-toolbar .filter-row { margin-bottom: 0; }
+.todo-toolbar input[type="search"] {
+  width: 15rem; padding: 0.45rem 0.8rem; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.todo-toolbar input[type="search"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.filter-row .count {
+  display: inline-block; min-width: 1.5em; margin-left: 0.3rem; padding: 0 0.35rem; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink-2); font-size: 0.8rem; text-align: center; font-variant-numeric: tabular-nums;
+}
+.filter-row button[aria-pressed="true"] .count { background: var(--surface); color: var(--ink); }
+
+.todo-section { margin-bottom: 2rem; }
+.todo-section-title { display: flex; align-items: baseline; gap: 0.6rem; font-size: 1.25rem; margin-bottom: 0.75rem; }
+.todo-section-count { font-family: var(--font-body); font-size: 0.9rem; font-weight: 400; color: var(--muted); }
+.todo-group { font-family: var(--font-body); font-size: 0.85rem; font-weight: 700; color: var(--muted); margin: 1rem 0 0.4rem; }
+.todo-section .empty { padding: 0.5rem 0 0; }
+
+.todo-list {
+  list-style: none; margin: 0; padding: 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); overflow: hidden;
+}
+.todo-item { display: flex; align-items: flex-start; gap: 0.85rem; padding: 0.8rem 1rem; }
+.todo-item + .todo-item { border-top: 1px solid var(--line); }
+
+/* Checkbox as a cube sticker: empty plastic outline, fills green when done. */
+.todo-check {
+  flex: none; width: 26px; height: 26px; margin-top: 1px; padding: 0; cursor: pointer;
+  display: grid; place-items: center;
+  border: 2px solid var(--axis); border-radius: var(--r-sticker); background: var(--surface);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.todo-check svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+.todo-check:hover { border-color: var(--ready); }
+.todo-check:hover svg { opacity: 0.35; stroke: var(--ready); }
+.todo-check[aria-checked="true"] { background: var(--ready); border-color: var(--ready); }
+.todo-check[aria-checked="true"] svg { opacity: 1; stroke: #fff; }
+
+.todo-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.todo-text { overflow-wrap: anywhere; font-size: 1.02rem; }
+.todo-meta { font-size: 0.8rem; color: var(--muted); }
+.todo-edit { padding: 0.3rem 0.5rem; }
+.todo-actions { display: flex; gap: 0.1rem; flex: none; }
+
+/* Completed tasks stay readable for reference: muted, not struck through. */
+.todo-done .todo-list { background: var(--surface-2); }
+.todo-done .todo-text { color: var(--ink-2); }
+
+/* Actions appear on hover or focus where there is a pointer; always on touch. */
+@media (hover: hover) {
+  .todo-actions { opacity: 0; transition: opacity 120ms ease; }
+  .todo-item:hover .todo-actions, .todo-item:focus-within .todo-actions { opacity: 1; }
+}
 
 /* ---------- Responsive ---------- */
 
@@ -489,5 +542,7 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
   .solve-n { display: none; }
   .solve-note input { min-width: 5rem; }
   .hbar { grid-template-columns: 6.5rem minmax(0, 1fr); }
+  .todo-toolbar input[type="search"] { width: 100%; }
+  .todo-add .primary-btn { padding: 0.6rem 0.8rem; }
   .toast { bottom: 5.5rem; }
 }

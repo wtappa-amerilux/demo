@@ -23,7 +23,10 @@ online and fall back to system fonts offline.
   temperature, a heatmap of the nine qualities, daily best and mean solve times
   (weekdays only: weekends are left off that axis), and tag counts. Every chart
   has a table view.
-- **Todo**: simple task list.
+- **Todo**: filter by Open, Completed or All (with counts) and search. Open tasks
+  are listed in the order added; completed tasks are kept for reference, grouped
+  by the day they were finished. Task text can be edited in place. Tasks finished
+  before completion times were recorded show under "Completed earlier".
 
 ## Structure
 

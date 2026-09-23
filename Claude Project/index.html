@@ -204,14 +204,24 @@
         <section id="view-todo" class="view" data-view="todo" hidden>
           <header class="page-head">
             <h1>Todo</h1>
+            <p class="page-sub" id="todo-summary"></p>
           </header>
-          <form id="todo-form" class="panel inline-add todo-form">
+
+          <form id="todo-form" class="todo-add" autocomplete="off">
             <input id="todo-text" type="text" placeholder="Add a task" maxlength="200" required aria-label="New task">
             <button type="submit" class="primary-btn">Add task</button>
           </form>
-          <p id="todo-count" class="meta"></p>
-          <ul id="todo-list" class="list"></ul>
-          <p id="todo-empty" class="empty" hidden></p>
+
+          <div class="todo-toolbar">
+            <div class="filter-row" role="group" aria-label="Show tasks" id="todo-filters">
+              <button type="button" data-filter="open">Open <span class="count" data-count="open"></span></button>
+              <button type="button" data-filter="done">Completed <span class="count" data-count="done"></span></button>
+              <button type="button" data-filter="all">All <span class="count" data-count="all"></span></button>
+            </div>
+            <input type="search" id="todo-search" placeholder="Search tasks" aria-label="Search tasks" maxlength="100">
+          </div>
+
+          <div id="todo-lists" aria-live="polite"></div>
         </section>
       </main>
     </div>
