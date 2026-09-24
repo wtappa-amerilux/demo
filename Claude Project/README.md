@@ -23,6 +23,13 @@ online and fall back to system fonts offline.
   temperature, a heatmap of the nine qualities, daily best and mean solve times
   (weekdays only: weekends are left off that axis), and tag counts. Every chart
   has a table view.
+- **Song years** (read-only): charts from `guesses.csv`, the log written by the
+  Spotify year-guessing overlay in `C:\Users\WilliamTappa\dev\spotify-year`. Pick
+  the file once with "Choose guesses.csv"; in Edge or Chrome the tab re-reads it on
+  each visit (the browser may ask for read permission once per session). The app
+  never writes to it. The last read is cached so the tab still works when the file
+  is unavailable, and it shows when it was read. The cache is not part of
+  "Download a backup": the CSV is the source of truth.
 - **Todo**: filter by Open, Completed or All (with counts) and search. Open tasks
   are listed in the order added; completed tasks are kept for reference, grouped
   by the day they were finished. Task text can be edited in place. Tasks finished
@@ -41,6 +48,7 @@ js/charts.js        SVG line, column, heatmap and bar charts
 js/journal.js       journal screen
 js/cube.js          timer and solve log
 js/trends.js        charts screen
+js/songs.js         Song years: CSV parsing, remembered file handle, charts
 js/todo.js          todo list
 js/app.js           navigation, backup download and restore
 ```

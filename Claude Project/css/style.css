@@ -444,6 +444,25 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
 .on-plastic .data-table th, .on-plastic .data-table td { border-color: #2d3442; }
 .table-wrap { overflow-x: auto; max-height: 360px; overflow-y: auto; }
 
+/* ---------- Song years ---------- */
+
+.songs-source { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.25rem; margin-bottom: 1.25rem; padding: 0.85rem 1.1rem; }
+.source-info { min-width: 0; flex: 1 1 22rem; }
+.source-line { margin: 0; font-size: 0.9rem; overflow-wrap: anywhere; }
+.source-line + .source-line { margin-top: 0.2rem; }
+.source-line.muted { color: var(--muted); }
+.source-line.warn { color: var(--warn-ink); background: var(--warn-bg); padding: 0.3rem 0.5rem; border-radius: 6px; margin-top: 0.4rem; }
+.source-line.error { color: var(--danger); margin-top: 0.4rem; }
+.source-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.songs-intro { max-width: 40rem; }
+.songs-intro h2 { margin-bottom: 0.5rem; }
+.songs-intro p { margin: 0 0 0.75rem; }
+
+.chart .band { fill: var(--accent-wash); }
+.chart .diagonal { stroke: var(--axis); stroke-width: 1.5; }
+.chart .dot-ring { fill: none; stroke: var(--ink); stroke-width: 2; pointer-events: none; }
+
 /* ---------- Todo ---------- */
 
 /* The add field is the page's main control: big, on its own row. */

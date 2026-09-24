@@ -1,9 +1,9 @@
-// Hash-based navigation (#journal, #cube, #trends, #todo). Works on file://
+// Hash-based navigation (#journal, #cube, #trends, #songs, #todo). Works on file://
 // with no server, and back/forward move between sections.
 (function () {
-  const VIEWS = ['journal', 'cube', 'trends', 'todo'];
+  const VIEWS = ['journal', 'cube', 'trends', 'songs', 'todo'];
   const DEFAULT_VIEW = 'journal';
-  const hooks = { journal: App.journal, cube: App.cube, trends: App.trends };
+  const hooks = { journal: App.journal, cube: App.cube, trends: App.trends, songs: App.songs };
   let current = null;
 
   function viewFromHash() {
@@ -22,7 +22,7 @@
     });
     current = name;
     if (hooks[name] && hooks[name].onShow) hooks[name].onShow();
-    document.title = { journal: 'Journal', cube: 'Cube timer', trends: 'Trends', todo: 'Todo' }[name] + ' | Facelog';
+    document.title = { journal: 'Journal', cube: 'Cube timer', trends: 'Trends', songs: 'Song years', todo: 'Todo' }[name] + ' | Facelog';
   }
 
   function exportData() {
@@ -61,6 +61,7 @@
     App.journal.init();
     App.cube.init();
     App.trends.init();
+    App.songs.init();
     App.todo.init();
 
     document.getElementById('export-btn').addEventListener('click', exportData);

@@ -152,6 +152,82 @@ App.charts = (function () {
     hit.addEventListener('pointerleave', () => { cross.setAttribute('visibility', 'hidden'); ring.replaceChildren(); tip.hide(); });
   }
 
+  // Scatter of a guessed year (up) against the actual year (across), both axes
+  // on the same scale, with the exact-guess diagonal and a shaded band for
+  // "within N years". Several guesses can share one spot; the tooltip lists all.
+  // cfg: { points: [{ x, y, title, detail }], band, ariaLabel }
+  let clipSeq = 0;
+  function guessScatter(host, cfg) {
+    const W = prep(host);
+    const H = Math.round(Math.min(440, Math.max(300, W * 0.55)));
+    const iw = W - M.left - M.right, ih = H - M.top - M.bottom;
+    const vals = cfg.points.flatMap(p => [p.x, p.y]);
+    const lo = Math.floor(Math.min(...vals) / 10) * 10;
+    const hi = Math.ceil((Math.max(...vals) + 1) / 10) * 10;
+    const x = v => M.left + (v - lo) / (hi - lo) * iw;
+    const y = v => M.top + ih - (v - lo) / (hi - lo) * ih;
+    const b = cfg.band;
+
+    const root = s('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': cfg.ariaLabel });
+    const clipId = 'clip' + (++clipSeq);
+    const defs = s('defs', {});
+    const clip = s('clipPath', { id: clipId });
+    clip.append(s('rect', { x: M.left, y: M.top, width: iw, height: ih }));
+    defs.append(clip);
+    root.append(defs);
+
+    for (let v = lo; v <= hi; v += 10) {
+      root.append(s('line', { class: 'grid', x1: M.left, x2: W - M.right, y1: y(v), y2: y(v) }));
+      root.append(s('line', { class: 'grid', x1: x(v), x2: x(v), y1: M.top, y2: M.top + ih }));
+      root.append(s('text', { class: 'tick', x: M.left - 8, y: y(v), 'text-anchor': 'end', 'dominant-baseline': 'middle' }, String(v)));
+      root.append(s('text', { class: 'tick', x: x(v), y: H - 8, 'text-anchor': 'middle' }, String(v)));
+    }
+    const pts = (a) => a.map(([px, py]) => x(px).toFixed(1) + ',' + y(py).toFixed(1)).join(' ');
+    root.append(s('polygon', {
+      class: 'band', 'clip-path': 'url(#' + clipId + ')',
+      points: pts([[lo, lo - b], [lo, lo + b], [hi, hi + b], [hi, hi - b]])
+    }));
+    root.append(s('line', { class: 'diagonal', x1: x(lo), y1: y(lo), x2: x(hi), y2: y(hi) }));
+
+    // One dot per distinct (actual, guess) spot.
+    const spots = new Map();
+    cfg.points.forEach(p => {
+      const k = p.x + ':' + p.y;
+      if (!spots.has(k)) spots.set(k, { x: p.x, y: p.y, items: [] });
+      spots.get(k).items.push(p);
+    });
+    const list = Array.from(spots.values());
+    list.forEach(sp => {
+      root.append(s('circle', {
+        class: 'dot', cx: x(sp.x), cy: y(sp.y), r: sp.items.length > 1 ? 6 : 4.5, style: 'fill:var(--series-1)'
+      }));
+    });
+    const ring = s('circle', { class: 'dot-ring', r: 8, visibility: 'hidden' });
+    root.append(ring);
+    const hit = s('rect', { class: 'hit', x: M.left, y: M.top, width: iw, height: ih });
+    root.append(hit);
+    host.append(root);
+
+    // Nearest spot within 24px of the pointer, so small dots are easy to hit.
+    const tip = tooltip(host);
+    hit.addEventListener('pointermove', ev => {
+      const box = root.getBoundingClientRect();
+      const px = ev.clientX - box.left, py = ev.clientY - box.top;
+      let best = null, bestD = 24 * 24;
+      list.forEach(sp => {
+        const dx = x(sp.x) - px, dy = y(sp.y) - py, d2 = dx * dx + dy * dy;
+        if (d2 < bestD) { bestD = d2; best = sp; }
+      });
+      if (!best) { ring.setAttribute('visibility', 'hidden'); tip.hide(); return; }
+      ring.setAttribute('cx', x(best.x)); ring.setAttribute('cy', y(best.y)); ring.setAttribute('visibility', 'visible');
+      const shown = best.items.slice(0, 6);
+      const rows = shown.map(p => ({ value: p.title, label: p.detail }));
+      if (best.items.length > shown.length) rows.push({ value: '+' + (best.items.length - shown.length) + ' more', label: '' });
+      tip.show(x(best.x), y(best.y), 'Guessed ' + best.y + ', actually ' + best.x, rows);
+    });
+    hit.addEventListener('pointerleave', () => { ring.setAttribute('visibility', 'hidden'); tip.hide(); });
+  }
+
   // Heatmap of rows x every calendar day in range. Days with no entry, and
   // qualities left blank on a logged day, both draw as empty plastic; the
   // tooltip tells them apart.
@@ -198,6 +274,7 @@ App.charts = (function () {
   }
 
   // Horizontal bars with the value at the tip. items: [{ label, value }]
+  // fmt(value, item) returns the tip text, so it can mention other fields.
   function hbars(host, items, fmt) {
     host.replaceChildren();
     host.className = 'hbar-list';
@@ -207,7 +284,7 @@ App.charts = (function () {
         U.el('span', { class: 'hbar-label', text: i.label, title: i.label }),
         U.el('span', { class: 'hbar-track' },
           U.el('span', { class: 'hbar-fill', style: 'width:' + (i.value / max * 85) + '%' }),
-          U.el('span', { class: 'hbar-val', text: fmt(i.value) }))));
+          U.el('span', { class: 'hbar-val', text: fmt(i.value, i) }))));
     });
   }
 
@@ -219,5 +296,5 @@ App.charts = (function () {
       U.el('tbody', null, rows.map(r => U.el('tr', null, r.map(c => U.el('td', { text: c })))))));
   }
 
-  return { line, heatmap, hbars, table, isWeekend };
+  return { line, guessScatter, heatmap, hbars, table, isWeekend };
 })();

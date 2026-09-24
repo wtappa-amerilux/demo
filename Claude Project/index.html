@@ -34,6 +34,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 15l5-5 4 3 7-7"/></svg>
           <span>Trends</span>
         </a>
+        <a href="#songs" class="nav-link" data-view="songs">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>
+          <span>Song years</span>
+        </a>
         <a href="#todo" class="nav-link" data-view="todo">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12.5l2.5 2.5 5-6"/></svg>
           <span>Todo</span>
@@ -200,6 +204,18 @@
           <div id="trend-charts"></div>
         </section>
 
+        <!-- SONG YEARS (read-only view of the Spotify overlay's guesses.csv) -->
+        <section id="view-songs" class="view" data-view="songs" hidden>
+          <header class="page-head">
+            <h1>Song years</h1>
+            <p class="page-sub" id="songs-sub">How your Spotify release-year guesses compare with the real years.</p>
+          </header>
+          <div class="panel songs-source" id="songs-source" hidden></div>
+          <input type="file" id="songs-file" accept=".csv,text/csv" hidden>
+          <div class="stats" id="songs-stats"></div>
+          <div id="songs-body"></div>
+        </section>
+
         <!-- TODO -->
         <section id="view-todo" class="view" data-view="todo" hidden>
           <header class="page-head">
@@ -238,6 +254,7 @@
   <script src="js/journal.js"></script>
   <script src="js/cube.js"></script>
   <script src="js/trends.js"></script>
+  <script src="js/songs.js"></script>
   <script src="js/todo.js"></script>
   <script src="js/app.js"></script>
 </body>
