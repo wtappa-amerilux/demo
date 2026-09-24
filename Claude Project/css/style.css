@@ -463,6 +463,26 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); ou
 .chart .diagonal { stroke: var(--axis); stroke-width: 1.5; }
 .chart .dot-ring { fill: none; stroke: var(--ink); stroke-width: 2; pointer-events: none; }
 
+/* Repeat guesses: one row per song, its tries as small stickers in order. */
+.repeat-list { list-style: none; margin: 0; padding: 0; }
+.repeat { padding: 0.8rem 0; border-top: 1px solid var(--line); }
+.repeat:first-child { border-top: 0; padding-top: 0.25rem; }
+.repeat-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; margin-bottom: 0.5rem; }
+.repeat-song { font-weight: 700; }
+.repeat-artist { color: var(--muted); font-size: 0.9rem; }
+.repeat-verdict { margin-left: auto; font-size: 0.85rem; font-weight: 700; color: var(--ink-2); }
+.repeat-tries { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.try {
+  display: grid; grid-template-columns: auto; gap: 0.05rem; min-width: 7.5rem;
+  padding: 0.45rem 0.65rem; border-radius: var(--r-control);
+  background: var(--surface-2); border: 1px solid var(--line);
+}
+.try-n { font-size: 0.75rem; color: var(--muted); }
+.try-guess { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.try-off { font-size: 0.8rem; color: var(--ink-2); }
+.try.near { box-shadow: inset 3px 0 0 var(--i4); }
+.try.exact { box-shadow: inset 3px 0 0 var(--ready); }
+
 /* ---------- Todo ---------- */
 
 /* The add field is the page's main control: big, on its own row. */

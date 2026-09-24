@@ -23,13 +23,21 @@ online and fall back to system fonts offline.
   temperature, a heatmap of the nine qualities, daily best and mean solve times
   (weekdays only: weekends are left off that axis), and tag counts. Every chart
   has a table view.
-- **Song years** (read-only): charts from `guesses.csv`, the log written by the
-  Spotify year-guessing overlay in `C:\Users\WilliamTappa\dev\spotify-year`. Pick
-  the file once with "Choose guesses.csv"; in Edge or Chrome the tab re-reads it on
-  each visit (the browser may ask for read permission once per session). The app
-  never writes to it. The last read is cached so the tab still works when the file
-  is unavailable, and it shows when it was read. The cache is not part of
-  "Download a backup": the CSV is the source of truth.
+- **Song years** (read-only): charts from the Spotify year-guessing overlay's
+  folder, `C:\Users\WilliamTappa\dev\spotify-year`. Pick the folder once; in Edge
+  or Chrome the tab re-reads it on each visit (the browser may ask for read
+  permission once per session). The app never writes there. It reads:
+  - `guesses.csv` (required): guess vs actual year, accuracy by weekday (weekends
+    left off the axis), how far off, by decade, most-guessed artists, songs guessed
+    more than once, and recent guesses.
+  - `artist-info.json` (optional, made by `Get-ArtistInfo.ps1` in that folder from
+    MusicBrainz): accuracy by genre family, bands vs solo artists, and artist
+    country. Artists without details are shown by reason (not looked up yet, not
+    found, no genre on file), never dropped.
+
+  The last read is cached so the tab still works when the folder is unavailable,
+  and it shows when it was read. The cache is not part of "Download a backup": the
+  overlay's files are the source of truth.
 - **Todo**: filter by Open, Completed or All (with counts) and search. Open tasks
   are listed in the order added; completed tasks are kept for reference, grouped
   by the day they were finished. Task text can be edited in place. Tasks finished
